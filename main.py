@@ -37,7 +37,14 @@ test_font = pygame.font.Font(None, 100)
 bg_black = pygame.Surface((w, h))
 bg_black.fill('black')
 
-bg_clouds = pygame.image.load('assets/clouds.webp').convert()
+bg_clouds = pygame.image.load('assets/clouds.png').convert()
+bg_rain1 = pygame.image.load('assets/rain1.png').convert_alpha()
+bg_rain2 = pygame.image.load('assets/rain2.png').convert_alpha()
+bg_rain3 = pygame.image.load('assets/rain3.png').convert_alpha()
+bg_rain_surf = bg_rain1
+bg_rain = [bg_rain1, bg_rain2, bg_rain3]
+bg_rain_index = 0
+
 bg_store = pygame.image.load('assets/template-work.png').convert_alpha()
 
 
@@ -120,6 +127,15 @@ ladder_player1_right = pygame.transform.flip(ladder_player1_left, flip_x=True, f
 ladder_player1 = ladder_player1_right  # default starting direction
 
 
+def rain_animation():
+    global bg_rain_surf, bg_rain_index
+    bg_rain_index += 0.2
+    if bg_rain_index >= len(bg_rain):
+        bg_rain_index = 0
+    bg_rain_surf = bg_rain[int(bg_rain_index)]
+
+
+
 def char_animation(direction='right'):
     global char_surf, char_index
     # walk
@@ -162,8 +178,10 @@ while True:
     if keys_pressed[pygame.K_DOWN]:
         char_y += Y_SPEED
 
-
-    screen.blit(bg_clouds, (100, 0))
+    screen.blit(bg_clouds, (0, -220))
+    bg_rain_surf.set_alpha(100)
+    screen.blit(bg_rain_surf, (0, 0))
+    rain_animation()
     screen.blit(bg_store, (0, 0))
 
     # character sprites go here
@@ -191,7 +209,6 @@ while True:
 
     # default shadow overlays.
     lamps = [lamp1, lamp2, lamp3, lamp4, lamp5, lamp6]
-
 
     lights_list[2] = False
     lights_list[3] = False
