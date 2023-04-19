@@ -3,6 +3,7 @@
 # Date created: March 16, 2023
 
 import pygame
+import math
 
 # CONSTANTS
 # sets the darkness of all lights out
@@ -66,17 +67,17 @@ fg_light6_off = pygame.image.load('assets/light6_off.png').convert_alpha()
 
 # bulb when off
 lamp1 = pygame.image.load('assets/bulb_on.png').convert_alpha()
-lamp_rect1 = lamp1.get_rect(topleft=(50, 0))
+lamp_rect1 = lamp1.get_rect(midtop=(110, 0))
 # bulb when on
 lampOff1 = pygame.image.load('assets/bulb_off.png')
-lampOff_rect1 = lampOff1.get_rect(topleft=(50, 0))
+lampOff_rect1 = lampOff1.get_rect(midtop=(110, 0))
 
 # bulb when off
 lamp2 = pygame.image.load('assets/bulb_on.png').convert_alpha()
-lamp_rect2 = lamp2.get_rect(topleft=(270, 0))
+lamp_rect2 = lamp2.get_rect(midtop=(330, 0))
 # bulb when on
 lampOff2 = pygame.image.load('assets/bulb_off.png')
-lampOff_rect2 = lampOff2.get_rect(topleft=(270, 0))
+lampOff_rect2 = lampOff2.get_rect(midtop=(330, 0))
 
 # bulb when off
 lamp3 = pygame.image.load('assets/bulb_on.png').convert_alpha()
@@ -112,6 +113,8 @@ char_surf_right = char_surf
 char_surf_left = pygame.transform.flip(char_surf, flip_x=True, flip_y=False)
 
 char_idle = pygame.image.load('assets/char_idle.png')
+char_idle_right = char_idle
+char_idle_left = pygame.transform.flip(char_idle_right,flip_x=True, flip_y=False)
 char_walk1 = pygame.image.load('assets/char_walk1.png')
 char_walk2 = pygame.image.load('assets/char_walk2.png')
 char_walk = [char_walk1, char_walk2]
@@ -144,8 +147,10 @@ def char_animation(direction='right'):
         char_index = 0
     if direction == 'right':
         char_surf = char_walk[int(char_index)]
-    if direction == 'left':
+    elif direction == 'left':
         char_surf = pygame.transform.flip(char_walk[int(char_index)], flip_x=True, flip_y=False)
+    else:
+        char_surf = char_idle
 
 
 while True:
@@ -156,25 +161,40 @@ while True:
 
     # player 1 movement
     char_rect = char_surf.get_rect(midbottom=(char_x, char_y))
+    char_surf = char_idle
+
     keys_pressed = pygame.key.get_pressed()
+    if keys_pressed[pygame.K_ESCAPE]:
+        exit()
+
     if keys_pressed[pygame.K_LEFT] and char_y == FLOOR:
         char_x -= X_SPEED
         char_animation('left')
         ladder_player1 = ladder_player1_left
         ladder_x = char_rect.x
         ladder_y = LADDER_Y_WALK
+        char_idle = char_idle_left
     if keys_pressed[pygame.K_RIGHT] and char_y == FLOOR:
         char_x += X_SPEED
         char_animation('right')
         ladder_player1 = ladder_player1_right
         ladder_x = char_rect.x
         ladder_y = LADDER_Y_WALK
+        char_idle = char_idle_right
+
     if keys_pressed[pygame.K_UP]:  # climb
         if player1_hasLadder:
             ladder_player1 = ladder
+
             ladder_x = char_rect.x + 15
             ladder_y = LADDER_Y_CLIMB
             char_y -= Y_SPEED
+            if 80 <= char_x <= 140:
+                char_x = lamp_rect1.centerx
+
+    print(char_x)
+
+
     if keys_pressed[pygame.K_DOWN]:
         char_y += Y_SPEED
 
@@ -210,9 +230,10 @@ while True:
     # default shadow overlays.
     lamps = [lamp1, lamp2, lamp3, lamp4, lamp5, lamp6]
 
+    lights_list[0] = True
+    lights_list[1] = False
     lights_list[2] = False
     lights_list[3] = False
-    lights_list[4] = False
 
     # this mess of code sets the parameters of lights on/off
     if lights_list[0]:
