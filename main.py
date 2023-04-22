@@ -10,8 +10,7 @@ pygame.init()
 
 # CONSTANTS
 # sets the darkness of all lights out
-WINNER = False
-FALL_CHANCE = 200  # chance of ladder breaking (default 200)
+FALL_CHANCE = 300  # chance of ladder breaking (default 250)
 SLIP_CHANCE = 80  # chance of slipping in puddle (default 80)
 FALL_SPEED = 45
 LIGHT_LEVEL = 0
@@ -24,57 +23,20 @@ LADDER_Y_CLIMB = 380
 testFont = pygame.font.Font(None, 150)
 smallFont = pygame.font.Font(None, 60)
 smallerFont = pygame.font.Font(None, 35)
+flashTimer = 4 # max duration of lightning strike
 
 DISPLAY_TITLE = testFont.render('NIGHT SHIFT', True, 'White')
 DISPLAY_PRESS_SPACE = smallerFont.render('Press Space to Play...', True, 'White')
 DISPLAY_INTRO = smallFont.render('Welcome to the night shift.', True, 'White')
 DISPLAY_INTRO2 = smallFont.render('All you have to do is keep the lights on...', True, 'White')
-red = (220, 0, 0)  # set to 220,0,0
-green = (0, 180, 0)
+red = (200, 0, 0)  # set to 200,0,0
+green = (0, 200, 0)
 DISPLAY_INTRO3 = smallFont.render('To stay alive.', True, red)
 DISPLAY_WINNER1 = testFont.render('Player One Wins!', True, green)
 DISPLAY_WINNER2 = testFont.render('Player Two Wins!', True, red)
 
 
-#  defaults
-char_x = 150
-char_y = FLOOR
-enemy_x = 1170
-enemy_y = FLOOR
-ladder_player1_x = -200
-ladder_player1_y = LADDER_Y_WALK
-ladder_player2_x = -200
-ladder_player2_y = LADDER_Y_WALK
-lightning = False
-flashTimer = 4 # max duration of lightning strike
-gameTimer = 0
-timeStart = 0
-alpha = 0
-char_direction = 'right'
-enemy_direction = 'left'
-
-introMusicPlaying = False
-introMusic2Playing = False
-musicPlaying = False
-screw1Playing = False
-screw2Playing = False
-break1Playing = False
-break2Playing = False
-player1_hasLadder = False
-player2_hasLadder = False
-ladder1_broken = False
-ladder2_broken = False
-player1_climbing = False
-player2_climbing = False
-player1_atLight = False
-player2_atLight = False
-player1_fall = False
-player2_fall = False
-
-lights_list = [True, False, False, True, False, True]
-
 w, h = 1320, 600
-
 screen = pygame.display.set_mode((w, h))
 
 pygame.display.set_caption('Night Shift')  # Title of the window
@@ -430,484 +392,533 @@ def crow_anim():
     crow_surf = pygame.transform.scale(crow_surf, (100, 100))
 
 
-
-# Game Intro
-'''
 while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            exit()
-    keys_pressed = pygame.key.get_pressed()
-    if keys_pressed[pygame.K_ESCAPE]:
-        exit()
-    if keys_pressed[pygame.K_SPACE] and gameTimer > 0.5:
-        break
 
-    if not introMusicPlaying:
-        playIntro()
-
-    gameTimer += 0.016
-
-    screen.blit(bg_black, (0, 0))
-    bg_rain_surf.set_alpha(70)
-    screen.blit(bg_rain_surf, (0, 0))
-    rain_animation()
-
-    screen.blit(DISPLAY_TITLE, (330, 250))
-    if gameTimer > 6.3:
-        screen.blit(DISPLAY_PRESS_SPACE, (1000, 520))
-
-    pygame.display.update()
-    clock.tick(60)
-
-# intro part 2
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            exit()
-
-    keys_pressed = pygame.key.get_pressed()
-    if keys_pressed[pygame.K_ESCAPE]:
-        exit()
-    if keys_pressed[pygame.K_RETURN]:  # temporary bypass
-        break
-
-    screen.blit(bg_black, (0, 0))
-    if introMusicPlaying:
-        introMusic.stop()
-    if not introMusic2Playing:
-        playIntro2()
-    gameTimer += 0.016
-
-    screen.blit(DISPLAY_INTRO, (100, 150))
-    if gameTimer > 2.8:
-        screen.blit(DISPLAY_INTRO2, (100, 250))
-    if gameTimer > 5.5:
-        if alpha < 220:
-            alpha += 3
-        redText = (alpha, 0, 0)
-        DISPLAY_INTRO3 = smallFont.render('To stay alive.', True, redText)
-        screen.blit(DISPLAY_INTRO3, (100, 400))
-    if gameTimer > 9:
-        break
-
-    pygame.display.update()
-    clock.tick(60)
-'''
-# Main Game
-while True:
-    gameTimer += 0.016
-    # print(gameTimer)
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
-            exit()
-
-    introMusic.stop()
-    introMusic2.stop()
-    if not musicPlaying:
-        startMusic()
-        thunder()
-
-    # lightning flashes
-    if flashTimer > 9:
-        flashChance = random.randint(0, 220)
-        if flashChance == 1:
-            thunder()
-
-    if flashTimer < 3:
-        flashing = random.randint(0, 10)
-        if flashing != 0:
-            lightning = True
-            flash = 255
-    flashTimer += .1
-
-    # player 1 movement
-    char_rect = char_surf.get_rect(midbottom=(char_x, char_y))
-    char_surf = char_idle
-
-    keys_pressed = pygame.key.get_pressed()
-    if keys_pressed[pygame.K_ESCAPE]:
-        exit()
-
-    if keys_pressed[pygame.K_LEFT] and char_y == FLOOR and not player1_fall:
-        char_x -= X_SPEED
-        char_direction = 'left'
-        if player1_hasLadder:
-            char_animation_ladder(char_direction)
-        else:
-            char_animation(char_direction)
-        if player1_hasLadder:
-            ladder_player1 = ladder_player1_left
-            ladder_player1_x = char_rect.x
-            ladder_player1_y = LADDER_Y_WALK
-        if player1_hasLadder:
-            char_idle = char_idle_leftL
-        else:
-            char_idle = char_idle_left
-        if 720 >= char_x >= 600:              # slip on puddle
-            slip_chance1 = random.randint(0, SLIP_CHANCE)
-            if slip_chance1 == 0:
-                if not player1_fall:
-                    playSlip1()
-                    falltimeStart = gameTimer
-                    player1_fall = True
-                if player1_hasLadder:
-                    ladder1_breaks()
-    if keys_pressed[pygame.K_RIGHT] and char_y == FLOOR and not player1_fall:
-        char_x += X_SPEED
-        char_direction = 'right'
-        if player1_hasLadder:
-            char_animation_ladder(char_direction)
-        else:
-            char_animation(char_direction)
-        if player1_hasLadder:
-            ladder_player1 = ladder_player1_right
-            ladder_player1_x = char_rect.x
-            ladder_player1_y = LADDER_Y_WALK
-        if player1_hasLadder:
-            char_idle = char_idle_rightL
-        else:
-            char_idle = char_idle_right
-        if 720 >= char_x >= 600:              # slip on puddle
-            slip_chance1 = random.randint(0, SLIP_CHANCE)
-            if slip_chance1 == 0:
-                if not player1_fall:
-                    playSlip1()
-                    falltimeStart = gameTimer
-                    player1_fall = True
-                if player1_hasLadder:
-                    ladder1_breaks()
-
-    if keys_pressed[pygame.K_UP]:  # climb
-        if player1_hasLadder and not player1_climbing and char_y == FLOOR and not player1_fall:
-            if 80 <= char_x <= 140:
-                char_x = lamp_rect1.centerx
-                player1_atLight = True
-            elif 300 <= char_x <= 360:
-                char_x = lamp_rect2.centerx
-                player1_atLight = True
-            elif 520 <= char_x <= 580:
-                char_x = lamp_rect3.centerx
-                player1_atLight = True
-            elif 740 <= char_x <= 800:
-                char_x = lamp_rect4.centerx
-                player1_atLight = True
-            elif 960 <= char_x <= 1020:
-                char_x = lamp_rect5.centerx
-                player1_atLight = True
-            elif 1180 <= char_x <= 1240:
-                char_x = lamp_rect6.centerx
-                player1_atLight = True
-            else:
-                player1_atLight = False
-
-            ladder_player1 = ladder
-            ladder_player1_x = char_x - 60
-            ladder_player1_y = LADDER_Y_CLIMB
-            if not player1_climbing:
-                timeStart = gameTimer
-            player1_climbing = True
-
-    if char_y < FLOOR:
-        char_climb_animation()
-
-    if player1_climbing and (char_y > CEILING):
-        char_y -= Y_SPEED
-    if char_y <= 430:
-        # ladder breaks
-        fall_chance1 = random.randint(0, FALL_CHANCE)
-        if fall_chance1 == 0:
-            if not player1_fall:
-                falltimeStart = gameTimer
-                player1_fall = True
-            ladder1_breaks()
-    if player1_fall:
-        player1_falling(char_direction)
-
-    if char_x == lamp_rect1.centerx and char_y <= CEILING:
-        screw(0)
-    if char_x == lamp_rect2.centerx and char_y <= CEILING:
-        screw(1)
-    if char_x == lamp_rect3.centerx and char_y <= CEILING:
-        screw(2)
-    if char_x == lamp_rect4.centerx and char_y <= CEILING:
-        screw(3)
-    if char_x == lamp_rect5.centerx and char_y <= CEILING:
-        screw(4)
-    if char_x == lamp_rect6.centerx and char_y <= CEILING:
-        screw(5)
-    if char_y <= CEILING and not player1_atLight:
-        player1_climbing = False
-
-    if not player1_climbing and char_y >= CEILING:
-        char_y += Y_SPEED
-
-
-    # player 2 movement
-    enemy_rect = enemy_surf.get_rect(midbottom=(enemy_x, enemy_y))
-    enemy_surf = enemy_idle
-
-    if keys_pressed[pygame.K_a] and enemy_y == FLOOR and not player2_fall:
-        enemy_x -= X_SPEED
-        enemy_animation('left')
-        if player2_hasLadder:
-            ladder_player2 = ladder_player2_left
-            ladder_player2_x = enemy_rect.x
-            ladder_player2_y = LADDER_Y_WALK
-        enemy_idle = enemy_idle_left
-        if 720 >= enemy_x >= 600:              # slip on puddle
-            slip_chance2 = random.randint(0, SLIP_CHANCE)
-            if slip_chance2 == 0:
-                if not player2_fall:
-                    playSlip2()
-                    timeStart2 = gameTimer
-                    player2_fall = True
-                if player2_hasLadder:
-                    ladder2_breaks()
-    if keys_pressed[pygame.K_d] and enemy_y == FLOOR and not player2_fall:
-        enemy_x += X_SPEED
-        enemy_animation('right')
-        if player2_hasLadder:
-            ladder_player2 = ladder_player2_right
-            ladder_player2_x = enemy_rect.x
-            ladder_player2_y = LADDER_Y_WALK
-        enemy_idle = enemy_idle_right
-        if 720 >= enemy_x >= 600:              # slip on puddle
-            slip_chance2 = random.randint(0, SLIP_CHANCE)
-            if slip_chance2 == 0:
-                if not player2_fall:
-                    playSlip2()
-                    timeStart2 = gameTimer
-                    player2_fall = True
-                if player2_hasLadder:
-                    ladder2_breaks()
-
-    if keys_pressed[pygame.K_w]:  # climb
-        if player2_hasLadder and enemy_y == FLOOR and not player2_climbing and not player2_fall:
-            if 80 <= enemy_x <= 140:
-                enemy_x = lamp_rect1.centerx
-                player2_atLight = True
-            elif 300 <= enemy_x <= 360:
-                enemy_x = lamp_rect2.centerx
-                player2_atLight = True
-            elif 520 <= enemy_x <= 580:
-                enemy_x = lamp_rect3.centerx
-                player2_atLight = True
-            elif 740 <= enemy_x <= 800:
-                enemy_x = lamp_rect4.centerx
-                player2_atLight = True
-            elif 960 <= enemy_x <= 1020:
-                enemy_x = lamp_rect5.centerx
-                player2_atLight = True
-            elif 1180 <= enemy_x <= 1240:
-                enemy_x = lamp_rect6.centerx
-                player2_atLight = True
-            else:
-                player2_atLight = False
-
-            ladder_player2 = ladder
-            ladder_player2_x = enemy_x - 60
-            ladder_player2_y = LADDER_Y_CLIMB
-            if not player2_climbing:
-                timeStart2 = gameTimer
-            player2_climbing = True
-
-    if player2_climbing and (enemy_y > CEILING):
-        enemy_y -= Y_SPEED
-    if enemy_y <= 430:
-        # ladder breaks
-        fall_chance2 = random.randint(0, FALL_CHANCE)
-        if fall_chance2 == 0:
-            if not player2_fall:
-                timeStart = gameTimer
-                player2_fall = True
-            ladder2_breaks()
-    if player2_fall:
-        player2_falling()
-
-    if enemy_x == lamp_rect1.centerx and enemy_y <= CEILING:
-        unscrew(0)
-    if enemy_x == lamp_rect2.centerx and enemy_y <= CEILING:
-        unscrew(1)
-    if enemy_x == lamp_rect3.centerx and enemy_y <= CEILING:
-        unscrew(2)
-    if enemy_x == lamp_rect4.centerx and enemy_y <= CEILING:
-        unscrew(3)
-    if enemy_x == lamp_rect5.centerx and enemy_y <= CEILING:
-        unscrew(4)
-    if enemy_x == lamp_rect6.centerx and enemy_y <= CEILING:
-        unscrew(5)
-    if enemy_y <= CEILING and not player2_atLight:
-        player2_climbing = False
-
-    if not player2_climbing and enemy_y >= CEILING:
-        enemy_y += Y_SPEED
-
-    # show backgrounds
-    if not lightning:
-        flash = 100  # sets brightness of sky without lightning
-    screen.blit(bg_black, (0, 0))
-    bg_clouds.set_alpha(flash)
-    screen.blit(bg_clouds, (0, -220))
-    if lightning:
-        screen.blit(bg_lightning, (50, -280))
-    bg_rain_surf.set_alpha(flash - 50)
-    screen.blit(bg_rain_surf, (0, 0))
-    rain_animation()
-    screen.blit(bg_store, (0, 0))
-
-    # player1 boundaries, get ladder
-    if char_rect.right <= 0:  # transports to other side of screen
-        player1_hasLadder = True  # gets a ladder off-screen
-        ladder1_broken = False
-        char_x = 1390
-    if char_rect.left >= 1320:
-        player1_hasLadder = True
-        ladder1_broken = False
-        char_x = -70
-    if char_y >= FLOOR:
-        char_y = FLOOR
-    if char_y <= CEILING:
-        char_y = CEILING
-
-    screen.blit(ladder_player1, (ladder_player1_x, ladder_player1_y))
-
-    # player2 boundaries
-    if enemy_rect.right <= 0:  # transports to other side of screen
-        player2_hasLadder = True  # gets a ladder off-screen
-        enemy_x = 1390
-    if enemy_rect.left >= 1320:
-        player2_hasLadder = True
-        enemy_x = -70
-    if enemy_y >= FLOOR:
-        enemy_y = FLOOR
-    if enemy_y <= CEILING:
-        enemy_y = CEILING
-
-    screen.blit(ladder_player2, (ladder_player2_x, ladder_player2_y))
-
-    screen.blit(char_surf, char_rect)
-    screen.blit(enemy_surf, enemy_rect)
-
-    # display light fixture(off) sprites
-    screen.blit(lampOff1, lampOff_rect1)  # always visible
-    screen.blit(lampOff2, lampOff_rect2)
-    screen.blit(lampOff3, lampOff_rect3)
-    screen.blit(lampOff4, lampOff_rect4)
-    screen.blit(lampOff5, lampOff_rect5)
-    screen.blit(lampOff6, lampOff_rect6)
-
-    crow_anim()
-    screen.blit(crow_surf, (0, 175))
-
-    # this mess of code sets the parameters of lights on/off
-    if lights_list[0]:
-        fg_light1 = fg_light1_on
-        lamp1.set_alpha(255)
-    else:
-        fg_light1 = fg_light1_off
-        lamp1.set_alpha(0)
-
-    if lights_list[1]:
-        fg_light2 = fg_light2_on
-        lamp2.set_alpha(255)
-    else:
-        fg_light2 = fg_light2_off
-        lamp2.set_alpha(0)
-
-    if lights_list[2]:
-        fg_light3 = fg_light3_on
-        lamp3.set_alpha(255)
-    else:
-        fg_light3 = fg_light3_off
-        lamp3.set_alpha(0)
-
-    if lights_list[3]:
-        fg_light4 = fg_light4_on
-        lamp4.set_alpha(255)
-    else:
-        fg_light4 = fg_light4_off
-        lamp4.set_alpha(0)
-
-    if lights_list[4]:
-        fg_light5 = fg_light5_on
-        lamp5.set_alpha(255)
-    else:
-        fg_light5 = fg_light5_off
-        lamp5.set_alpha(0)
-
-    if lights_list[5]:
-        fg_light6 = fg_light6_on
-        lamp6.set_alpha(255)
-    else:
-        fg_light6 = fg_light6_off
-        lamp6.set_alpha(0)
-
-    LIGHT_LEVEL = 80
-    if lightning:
-        LIGHT_LEVEL -= 180
-    for i in lights_list:
-        if not i:
-            LIGHT_LEVEL += 34
-
-    fg_light1_on.set_alpha(LIGHT_LEVEL)
-    fg_light1_off.set_alpha(LIGHT_LEVEL)
-    fg_light2_on.set_alpha(LIGHT_LEVEL)
-    fg_light2_off.set_alpha(LIGHT_LEVEL)
-    fg_light3_on.set_alpha(LIGHT_LEVEL)
-    fg_light3_off.set_alpha(LIGHT_LEVEL)
-    fg_light4_on.set_alpha(LIGHT_LEVEL)
-    fg_light4_off.set_alpha(LIGHT_LEVEL)
-    fg_light5_on.set_alpha(LIGHT_LEVEL)
-    fg_light5_off.set_alpha(LIGHT_LEVEL)
-    fg_light6_on.set_alpha(LIGHT_LEVEL)
-    fg_light6_off.set_alpha(LIGHT_LEVEL)
-
-    screen.blit(fg_light1, (0, 0))
-    screen.blit(fg_light2, (220, 0))
-    screen.blit(fg_light3, (440, 0))
-    screen.blit(fg_light4, (660, 0))
-    screen.blit(fg_light5, (880, 0))
-    screen.blit(fg_light6, (1100, 0))
-
-    screen.blit(lamp1, lamp_rect1)
-    screen.blit(lamp2, lamp_rect2)
-    screen.blit(lamp3, lamp_rect3)
-    screen.blit(lamp4, lamp_rect4)
-    screen.blit(lamp5, lamp_rect5)
-    screen.blit(lamp6, lamp_rect6)
-
-    # Flash white with lightning
-    fg_white.set_alpha(50)
-    if lightning:
-        screen.blit(fg_white, (0, 0))
-
+    #  defaults
+    WINNER = False
+    char_x = 150
+    char_y = FLOOR
+    enemy_x = 1170
+    enemy_y = FLOOR
+    ladder_player1_x = -200
+    ladder_player1_y = LADDER_Y_WALK
+    ladder_player2_x = -200
+    ladder_player2_y = LADDER_Y_WALK
     lightning = False
 
-    # Display winner
-    if False not in lights_list:
-        screen.blit(DISPLAY_WINNER1, (230, 220))
-        break
+    gameTimer = 0
+    timeStart = 0
+    alpha = 0
+    char_direction = 'right'
+    enemy_direction = 'left'
+    char_idle = char_idle_right
+    enemy_idle = enemy_idle_left
 
-    elif True not in lights_list:
-        screen.blit(DISPLAY_WINNER2, (230, 220))
-        break
+    introMusicPlaying = False
+    introMusic2Playing = False
+    musicPlaying = False
+    screw1Playing = False
+    screw2Playing = False
+    break1Playing = False
+    break2Playing = False
+    player1_hasLadder = False
+    player2_hasLadder = False
+    ladder1_broken = False
+    ladder2_broken = False
+    player1_climbing = False
+    player2_climbing = False
+    player1_atLight = False
+    player2_atLight = False
+    player1_fall = False
+    player2_fall = False
 
-    pygame.display.update()
-    clock.tick(60)
+    lights_list = [False, False, False, False, False, False]
 
 
-while True:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            pygame.quit()
+    # set 3 lights off
+    list = [0, 1, 2, 3, 4, 5]
+    x = random.choice(list)
+    list.remove(x)
+    x = random.choice(list)
+    list.remove(x)
+    x = random.choice(list)
+    list.remove(x)
+
+    for i in list:
+        lights_list[i] = True
+
+    # Game Intro
+    '''
+    while True:
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+
+        if not introMusicPlaying:
+            playIntro()
+
+        keys_pressed = pygame.key.get_pressed()
+        if keys_pressed[pygame.K_ESCAPE]:
             exit()
-    keys_pressed = pygame.key.get_pressed()
-    if keys_pressed[pygame.K_ESCAPE]:
-        exit()
+        if keys_pressed[pygame.K_SPACE] and gameTimer > 0.5:
+            break
 
-    pygame.display.update()
-    clock.tick(60)
+        gameTimer += 0.016
+        screen.blit(bg_black, (0, 0))
+        bg_rain_surf.set_alpha(80)
+        screen.blit(bg_rain_surf, (0, 0))
+        rain_animation()
+
+        screen.blit(DISPLAY_TITLE, (330, 250))
+        if gameTimer > 6.3:
+            screen.blit(DISPLAY_PRESS_SPACE, (1000, 520))
+
+        pygame.display.update()
+        clock.tick(60)
+
+    # intro part 2
+    while True:
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+    
+        keys_pressed = pygame.key.get_pressed()
+        if keys_pressed[pygame.K_ESCAPE]:
+            exit()
+    
+        screen.blit(bg_black, (0, 0))
+        if introMusicPlaying:
+            introMusic.stop()
+        if not introMusic2Playing:
+            playIntro2()
+        gameTimer += 0.016
+
+        if keys_pressed[pygame.K_SPACE] and gameTimer > 1.0:
+            break
+    
+        screen.blit(DISPLAY_INTRO, (100, 150))
+        if gameTimer > 2.8:
+            screen.blit(DISPLAY_INTRO2, (100, 250))
+        if gameTimer > 5.5:
+            if alpha < 220:
+                alpha += 3
+            redText = (alpha, 0, 0)
+            DISPLAY_INTRO3 = smallFont.render('To stay alive.', True, redText)
+            screen.blit(DISPLAY_INTRO3, (100, 400))
+        if gameTimer > 9:
+            break
+    
+        pygame.display.update()
+        clock.tick(60)
+    '''
+    # Main Game
+
+    while True:
+        gameTimer += 0.016
+        # print(gameTimer)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                exit()
+
+        introMusic.stop()
+        introMusic2.stop()
+        if not musicPlaying:
+            startMusic()
+            thunder()
+
+        # lightning flashes
+        if flashTimer > 9:
+            flashChance = random.randint(0, 220)
+            if flashChance == 1:
+                thunder()
+
+        if flashTimer < 3:
+            flashing = random.randint(0, 10)
+            if flashing != 0:
+                lightning = True
+                flash = 255
+        flashTimer += .1
+
+        # player 1 movement
+        char_rect = char_surf.get_rect(midbottom=(char_x, char_y))
+        char_surf = char_idle
+
+        keys_pressed = pygame.key.get_pressed()
+        if keys_pressed[pygame.K_ESCAPE]:
+            exit()
+        if keys_pressed[pygame.K_SPACE]: # and WINNER:
+            break
+
+        if keys_pressed[pygame.K_LEFT] and char_y == FLOOR and not player1_fall and not WINNER:
+            char_x -= X_SPEED
+            char_direction = 'left'
+            if player1_hasLadder:
+                char_animation_ladder(char_direction)
+            else:
+                char_animation(char_direction)
+            if player1_hasLadder:
+                ladder_player1 = ladder_player1_left
+                ladder_player1_x = char_rect.x
+                ladder_player1_y = LADDER_Y_WALK
+            if player1_hasLadder:
+                char_idle = char_idle_leftL
+            else:
+                char_idle = char_idle_left
+            if 720 >= char_x >= 600:              # slip on puddle
+                slip_chance1 = random.randint(0, SLIP_CHANCE)
+                if slip_chance1 == 0:
+                    if not player1_fall:
+                        playSlip1()
+                        falltimeStart = gameTimer
+                        player1_fall = True
+                    if player1_hasLadder:
+                        ladder1_breaks()
+        if keys_pressed[pygame.K_RIGHT] and char_y == FLOOR and not player1_fall and not WINNER:
+            char_x += X_SPEED
+            char_direction = 'right'
+            if player1_hasLadder:
+                char_animation_ladder(char_direction)
+            else:
+                char_animation(char_direction)
+            if player1_hasLadder:
+                ladder_player1 = ladder_player1_right
+                ladder_player1_x = char_rect.x
+                ladder_player1_y = LADDER_Y_WALK
+            if player1_hasLadder:
+                char_idle = char_idle_rightL
+            else:
+                char_idle = char_idle_right
+            if 720 >= char_x >= 600:              # slip on puddle
+                slip_chance1 = random.randint(0, SLIP_CHANCE)
+                if slip_chance1 == 0:
+                    if not player1_fall:
+                        playSlip1()
+                        falltimeStart = gameTimer
+                        player1_fall = True
+                    if player1_hasLadder:
+                        ladder1_breaks()
+
+        if keys_pressed[pygame.K_UP]:  # climb
+            if player1_hasLadder and not player1_climbing and char_y == FLOOR and not player1_fall and not WINNER:
+                if 80 <= char_x <= 140:
+                    char_x = lamp_rect1.centerx
+                    player1_atLight = True
+                elif 300 <= char_x <= 360:
+                    char_x = lamp_rect2.centerx
+                    player1_atLight = True
+                elif 520 <= char_x <= 580:
+                    char_x = lamp_rect3.centerx
+                    player1_atLight = True
+                elif 740 <= char_x <= 800:
+                    char_x = lamp_rect4.centerx
+                    player1_atLight = True
+                elif 960 <= char_x <= 1020:
+                    char_x = lamp_rect5.centerx
+                    player1_atLight = True
+                elif 1180 <= char_x <= 1240:
+                    char_x = lamp_rect6.centerx
+                    player1_atLight = True
+                else:
+                    player1_atLight = False
+
+                ladder_player1 = ladder
+                ladder_player1_x = char_x - 60
+                ladder_player1_y = LADDER_Y_CLIMB
+                if not player1_climbing:
+                    timeStart = gameTimer
+                player1_climbing = True
+
+        if char_y < FLOOR:
+            char_climb_animation()
+
+        if player1_climbing and (char_y > CEILING):
+            char_y -= Y_SPEED
+        if char_y <= 430:
+            # ladder breaks
+            fall_chance1 = random.randint(0, FALL_CHANCE)
+            if fall_chance1 == 0:
+                if not player1_fall:
+                    falltimeStart = gameTimer
+                    player1_fall = True
+                ladder1_breaks()
+        if player1_fall:
+            player1_falling(char_direction)
+
+        if char_x == lamp_rect1.centerx and char_y <= CEILING:
+            screw(0)
+        if char_x == lamp_rect2.centerx and char_y <= CEILING:
+            screw(1)
+        if char_x == lamp_rect3.centerx and char_y <= CEILING:
+            screw(2)
+        if char_x == lamp_rect4.centerx and char_y <= CEILING:
+            screw(3)
+        if char_x == lamp_rect5.centerx and char_y <= CEILING:
+            screw(4)
+        if char_x == lamp_rect6.centerx and char_y <= CEILING:
+            screw(5)
+        if char_y <= CEILING and not player1_atLight:
+            player1_climbing = False
+
+        if not player1_climbing and char_y >= CEILING:
+            char_y += Y_SPEED
+
+
+        # player 2 movement
+        enemy_rect = enemy_surf.get_rect(midbottom=(enemy_x, enemy_y))
+        enemy_surf = enemy_idle
+
+        if keys_pressed[pygame.K_a] and enemy_y == FLOOR and not player2_fall and not WINNER:
+            enemy_x -= X_SPEED
+            enemy_animation('left')
+            if player2_hasLadder:
+                ladder_player2 = ladder_player2_left
+                ladder_player2_x = enemy_rect.x
+                ladder_player2_y = LADDER_Y_WALK
+            enemy_idle = enemy_idle_left
+            if 720 >= enemy_x >= 600:              # slip on puddle
+                slip_chance2 = random.randint(0, SLIP_CHANCE)
+                if slip_chance2 == 0:
+                    if not player2_fall:
+                        playSlip2()
+                        timeStart2 = gameTimer
+                        player2_fall = True
+                    if player2_hasLadder:
+                        ladder2_breaks()
+        if keys_pressed[pygame.K_d] and enemy_y == FLOOR and not player2_fall and not WINNER:
+            enemy_x += X_SPEED
+            enemy_animation('right')
+            if player2_hasLadder:
+                ladder_player2 = ladder_player2_right
+                ladder_player2_x = enemy_rect.x
+                ladder_player2_y = LADDER_Y_WALK
+            enemy_idle = enemy_idle_right
+            if 720 >= enemy_x >= 600:              # slip on puddle
+                slip_chance2 = random.randint(0, SLIP_CHANCE)
+                if slip_chance2 == 0:
+                    if not player2_fall:
+                        playSlip2()
+                        timeStart2 = gameTimer
+                        player2_fall = True
+                    if player2_hasLadder:
+                        ladder2_breaks()
+
+        if keys_pressed[pygame.K_w]:  # climb
+            if player2_hasLadder and enemy_y == FLOOR and not player2_climbing and not player2_fall and not WINNER:
+                if 80 <= enemy_x <= 140:
+                    enemy_x = lamp_rect1.centerx
+                    player2_atLight = True
+                elif 300 <= enemy_x <= 360:
+                    enemy_x = lamp_rect2.centerx
+                    player2_atLight = True
+                elif 520 <= enemy_x <= 580:
+                    enemy_x = lamp_rect3.centerx
+                    player2_atLight = True
+                elif 740 <= enemy_x <= 800:
+                    enemy_x = lamp_rect4.centerx
+                    player2_atLight = True
+                elif 960 <= enemy_x <= 1020:
+                    enemy_x = lamp_rect5.centerx
+                    player2_atLight = True
+                elif 1180 <= enemy_x <= 1240:
+                    enemy_x = lamp_rect6.centerx
+                    player2_atLight = True
+                else:
+                    player2_atLight = False
+
+                ladder_player2 = ladder
+                ladder_player2_x = enemy_x - 60
+                ladder_player2_y = LADDER_Y_CLIMB
+                if not player2_climbing:
+                    timeStart2 = gameTimer
+                player2_climbing = True
+
+        if player2_climbing and (enemy_y > CEILING):
+            enemy_y -= Y_SPEED
+        if enemy_y <= 430:
+            # ladder breaks
+            fall_chance2 = random.randint(0, FALL_CHANCE)
+            if fall_chance2 == 0:
+                if not player2_fall:
+                    timeStart = gameTimer
+                    player2_fall = True
+                ladder2_breaks()
+        if player2_fall:
+            player2_falling()
+
+        if enemy_x == lamp_rect1.centerx and enemy_y <= CEILING:
+            unscrew(0)
+        if enemy_x == lamp_rect2.centerx and enemy_y <= CEILING:
+            unscrew(1)
+        if enemy_x == lamp_rect3.centerx and enemy_y <= CEILING:
+            unscrew(2)
+        if enemy_x == lamp_rect4.centerx and enemy_y <= CEILING:
+            unscrew(3)
+        if enemy_x == lamp_rect5.centerx and enemy_y <= CEILING:
+            unscrew(4)
+        if enemy_x == lamp_rect6.centerx and enemy_y <= CEILING:
+            unscrew(5)
+        if enemy_y <= CEILING and not player2_atLight:
+            player2_climbing = False
+
+        if not player2_climbing and enemy_y >= CEILING:
+            enemy_y += Y_SPEED
+
+        # show backgrounds
+        if not lightning:
+            flash = 100  # sets brightness of sky without lightning
+        screen.blit(bg_black, (0, 0))
+        bg_clouds.set_alpha(flash)
+        screen.blit(bg_clouds, (0, -220))
+        if lightning:
+            screen.blit(bg_lightning, (50, -280))
+        bg_rain_surf.set_alpha(flash - 50)
+        screen.blit(bg_rain_surf, (0, 0))
+        rain_animation()
+        screen.blit(bg_store, (0, 0))
+
+        # player1 boundaries, get ladder
+        if char_rect.right <= 0:  # transports to other side of screen
+            player1_hasLadder = True  # gets a ladder off-screen
+            ladder1_broken = False
+            char_x = 1390
+        if char_rect.left >= 1320:
+            player1_hasLadder = True
+            ladder1_broken = False
+            char_x = -70
+        if char_y >= FLOOR:
+            char_y = FLOOR
+        if char_y <= CEILING:
+            char_y = CEILING
+
+        screen.blit(ladder_player1, (ladder_player1_x, ladder_player1_y))
+
+        # player2 boundaries
+        if enemy_rect.right <= 0:  # transports to other side of screen
+            player2_hasLadder = True  # gets a ladder off-screen
+            enemy_x = 1390
+        if enemy_rect.left >= 1320:
+            player2_hasLadder = True
+            enemy_x = -70
+        if enemy_y >= FLOOR:
+            enemy_y = FLOOR
+        if enemy_y <= CEILING:
+            enemy_y = CEILING
+
+        screen.blit(ladder_player2, (ladder_player2_x, ladder_player2_y))
+
+        screen.blit(char_surf, char_rect)
+        screen.blit(enemy_surf, enemy_rect)
+
+        # display light fixture(off) sprites
+        screen.blit(lampOff1, lampOff_rect1)  # always visible
+        screen.blit(lampOff2, lampOff_rect2)
+        screen.blit(lampOff3, lampOff_rect3)
+        screen.blit(lampOff4, lampOff_rect4)
+        screen.blit(lampOff5, lampOff_rect5)
+        screen.blit(lampOff6, lampOff_rect6)
+
+        crow_anim()
+        screen.blit(crow_surf, (0, 175))
+
+        # this mess of code sets the parameters of lights on/off
+        if lights_list[0]:
+            fg_light1 = fg_light1_on
+            lamp1.set_alpha(255)
+        else:
+            fg_light1 = fg_light1_off
+            lamp1.set_alpha(0)
+
+        if lights_list[1]:
+            fg_light2 = fg_light2_on
+            lamp2.set_alpha(255)
+        else:
+            fg_light2 = fg_light2_off
+            lamp2.set_alpha(0)
+
+        if lights_list[2]:
+            fg_light3 = fg_light3_on
+            lamp3.set_alpha(255)
+        else:
+            fg_light3 = fg_light3_off
+            lamp3.set_alpha(0)
+
+        if lights_list[3]:
+            fg_light4 = fg_light4_on
+            lamp4.set_alpha(255)
+        else:
+            fg_light4 = fg_light4_off
+            lamp4.set_alpha(0)
+
+        if lights_list[4]:
+            fg_light5 = fg_light5_on
+            lamp5.set_alpha(255)
+        else:
+            fg_light5 = fg_light5_off
+            lamp5.set_alpha(0)
+
+        if lights_list[5]:
+            fg_light6 = fg_light6_on
+            lamp6.set_alpha(255)
+        else:
+            fg_light6 = fg_light6_off
+            lamp6.set_alpha(0)
+
+        LIGHT_LEVEL = 80
+        if lightning:
+            LIGHT_LEVEL -= 180
+        for i in lights_list:
+            if not i:
+                LIGHT_LEVEL += 34
+
+        fg_light1_on.set_alpha(LIGHT_LEVEL)
+        fg_light1_off.set_alpha(LIGHT_LEVEL)
+        fg_light2_on.set_alpha(LIGHT_LEVEL)
+        fg_light2_off.set_alpha(LIGHT_LEVEL)
+        fg_light3_on.set_alpha(LIGHT_LEVEL)
+        fg_light3_off.set_alpha(LIGHT_LEVEL)
+        fg_light4_on.set_alpha(LIGHT_LEVEL)
+        fg_light4_off.set_alpha(LIGHT_LEVEL)
+        fg_light5_on.set_alpha(LIGHT_LEVEL)
+        fg_light5_off.set_alpha(LIGHT_LEVEL)
+        fg_light6_on.set_alpha(LIGHT_LEVEL)
+        fg_light6_off.set_alpha(LIGHT_LEVEL)
+
+        screen.blit(fg_light1, (0, 0))
+        screen.blit(fg_light2, (220, 0))
+        screen.blit(fg_light3, (440, 0))
+        screen.blit(fg_light4, (660, 0))
+        screen.blit(fg_light5, (880, 0))
+        screen.blit(fg_light6, (1100, 0))
+
+        screen.blit(lamp1, lamp_rect1)
+        screen.blit(lamp2, lamp_rect2)
+        screen.blit(lamp3, lamp_rect3)
+        screen.blit(lamp4, lamp_rect4)
+        screen.blit(lamp5, lamp_rect5)
+        screen.blit(lamp6, lamp_rect6)
+
+        # Flash white with lightning
+        fg_white.set_alpha(50)
+        if lightning:
+            screen.blit(fg_white, (0, 0))
+
+        lightning = False
+
+        # Display winner
+        if False not in lights_list:  # player one wins
+            WINNER = True
+            enemy_idle = crow_surf
+            screen.blit(DISPLAY_WINNER1, (230, 240))
+
+        elif True not in lights_list:  # player two wins
+            WINNER = True
+            screen.blit(DISPLAY_WINNER2, (230, 240))
+
+
+        pygame.display.update()
+        clock.tick(60)
+
