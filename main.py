@@ -4,16 +4,14 @@
 
 import random
 import pygame
-import sys
 
 pygame.init()
 
 # CONSTANTS
-# sets the darkness of all lights out
-FALL_CHANCE = 300  # chance of ladder breaking (default 250)
-SLIP_CHANCE = 80  # chance of slipping in puddle (default 80)
+FALL_CHANCE = 250  # chance of ladder breaking (default 250)
+SLIP_CHANCE = 100  # chance of slipping in puddle (default 100)
 FALL_SPEED = 45
-LIGHT_LEVEL = 0
+LIGHT_LEVEL = 0  # sets the darkness of all lights out
 FLOOR = 530
 CEILING = 395
 X_SPEED = 9
@@ -23,7 +21,8 @@ LADDER_Y_CLIMB = 380
 testFont = pygame.font.Font(None, 150)
 smallFont = pygame.font.Font(None, 60)
 smallerFont = pygame.font.Font(None, 35)
-flashTimer = 4 # max duration of lightning strike
+flashTimer = 4  # max duration of lightning strike
+fade = 255
 
 DISPLAY_TITLE = testFont.render('NIGHT SHIFT', True, 'White')
 DISPLAY_PRESS_SPACE = smallerFont.render('Press Space to Play...', True, 'White')
@@ -39,11 +38,12 @@ DISPLAY_WINNER2 = testFont.render('Player Two Wins!', True, red)
 w, h = 1320, 600
 screen = pygame.display.set_mode((w, h))
 
+
 pygame.display.set_caption('Night Shift')  # Title of the window
 clock = pygame.time.Clock()
 test_font = pygame.font.Font(None, 100)
 
-bg_black = pygame.Surface((w, h))
+bg_black = pygame.Surface((1920, 1080))
 bg_black.fill('black')
 
 fg_white = pygame.Surface((w, h)).convert_alpha()
@@ -120,43 +120,54 @@ lampOff6 = pygame.image.load('assets/bulb_off.png')
 lampOff_rect6 = lampOff6.get_rect(midtop=(1210, 0))
 
 # player 1
-char_surf = pygame.image.load('assets/char_idle.png').convert_alpha()
-char_surf_right = char_surf
-char_surf_left = pygame.transform.flip(char_surf, flip_x=True, flip_y=False)
-char_idle = pygame.image.load('assets/char_idle.png')
+
+char_idle = pygame.image.load('assets/char_idle.png').convert_alpha()
 char_idle_right = char_idle
 char_idle_left = pygame.transform.flip(char_idle_right, flip_x=True, flip_y=False)
-char_fall = pygame.image.load('assets/char_fall.png')
+char_fall = pygame.image.load('assets/char_fall.png').convert_alpha()
 char_fall_right = char_fall
 char_fall_left = pygame.transform.flip(char_fall_right, flip_x=True, flip_y=False)
-char_idleL = pygame.image.load('assets/char_idleL.png')
+char_idleL = pygame.image.load('assets/char_idleL.png').convert_alpha()
 char_idle_rightL = char_idleL
 char_idle_leftL = pygame.transform.flip(char_idle_rightL, flip_x=True, flip_y=False)
-char_walk1 = pygame.image.load('assets/char_walk1.png')
-char_walk2 = pygame.image.load('assets/char_walk2.png')
+char_walk1 = pygame.image.load('assets/char_walk1.png').convert_alpha()
+char_walk2 = pygame.image.load('assets/char_walk2.png').convert_alpha()
 char_walk = [char_walk1, char_walk2]
-char_walk1L = pygame.image.load('assets/char_walk1L.png')
-char_walk2L = pygame.image.load('assets/char_walk2L.png')
+char_walk1L = pygame.image.load('assets/char_walk1L.png').convert_alpha()
+char_walk2L = pygame.image.load('assets/char_walk2L.png').convert_alpha()
 char_walkL = [char_walk1L, char_walk2L]
 char_climb1 = pygame.image.load('assets/char_climb1.png')
 char_climb1 = pygame.transform.scale(char_climb1, (150, 155))
 char_climb2 = pygame.image.load('assets/char_climb2.png')
 char_climb2 = pygame.transform.scale(char_climb2, (150, 155))
 char_climb = [char_climb1, char_climb2]
+char_dead = pygame.image.load('assets/char_dead.png')
 char_index = 0
+char_surf = char_idle
+
 
 # player 2
-enemy_surf = pygame.image.load('assets/char_idle.png').convert_alpha()
-enemy_surf_right = enemy_surf
-enemy_surf_left = pygame.transform.flip(char_surf, flip_x=True, flip_y=False)
-enemy_idle = pygame.image.load('assets/char_idle.png')
+enemy_idle = pygame.image.load('assets/enemy_walk1.png').convert_alpha()
 enemy_idle_right = enemy_idle
 enemy_idle_left = pygame.transform.flip(enemy_idle_right, flip_x=True, flip_y=False)
 enemy_idle = enemy_idle_left
-enemy_walk1 = pygame.image.load('assets/char_walk1.png')
-enemy_walk2 = pygame.image.load('assets/char_walk2.png')
+enemy_walk1 = pygame.image.load('assets/enemy_walk1.png').convert_alpha()
+enemy_walk2 = pygame.image.load('assets/enemy_walk2.png').convert_alpha()
 enemy_walk = [enemy_walk1, enemy_walk2]
+enemy_walk1L = pygame.image.load('assets/enemy_walk1L.png').convert_alpha()
+enemy_walk2L = pygame.image.load('assets/enemy_walk2L.png').convert_alpha()
+enemy_walkL = [enemy_walk1L, enemy_walk2L]
+enemy_idleL = pygame.image.load('assets/enemy_walk1L.png').convert_alpha()
+enemy_idle_rightL = enemy_idleL
+enemy_idle_leftL = pygame.transform.flip(enemy_idle_rightL, flip_x=True, flip_y=False)
+enemy_climb1 = pygame.image.load('assets/enemy_climb1.png').convert_alpha()
+enemy_climb2 = pygame.transform.flip(enemy_climb1, flip_x=True, flip_y=False)
+enemy_climb = [enemy_climb1, enemy_climb2]
+enemy_fall = pygame.image.load('assets/enemy_fall.png').convert_alpha()
+enemy_fall_right = enemy_fall
+enemy_fall_left = pygame.transform.flip(enemy_fall_right, flip_x=True, flip_y=False)
 enemy_index = 0
+enemy_surf = enemy_idle
 
 crow1 = pygame.image.load('assets/Crow1.png').convert_alpha()
 crow2 = pygame.image.load('assets/Crow2.png').convert_alpha()
@@ -187,15 +198,16 @@ introMusic = pygame.mixer.Sound('assets/chopinintro.wav')
 introMusic2 = pygame.mixer.Sound('assets/chopinintro2.wav')
 music = pygame.mixer.Sound('assets/chopin_main.mp3')
 screwLight = pygame.mixer.Sound('assets/screwlight.wav')
+screwLight2 = screwLight
 breakSound = pygame.mixer.Sound('assets/break.wav')
 slipSound = pygame.mixer.Sound('assets/slip.wav')
-thunderClap.set_volume(0.3)  # 0.3
+thunderClap.set_volume(0.25)  # 0.3
 introMusic.set_volume(0.5)  # 0.5
 introMusic2.set_volume(1.0)  # 1.0
-music.set_volume(0.0)  # 0.4
-screwLight.set_volume(0.5)  # 0.5
+music.set_volume(0.4)  # 0.4
+screwLight.set_volume(0.4)  # 0.4
 breakSound.set_volume(1.0)  # 1.0
-slipSound.set_volume(0.5)  # 0.5
+slipSound.set_volume(0.4)  # 0.4
 
 
 
@@ -253,6 +265,26 @@ def enemy_animation(direction='right'):
     else:
         enemy_surf = enemy_idle
 
+def enemy_animation_ladder(direction):
+    global enemy_surf, enemy_index
+    enemy_index += 0.15
+    if enemy_index >= len(enemy_walk):
+        enemy_index = 0
+    if direction == 'right':
+        enemy_surf = enemy_walkL[int(enemy_index)]
+    elif direction == 'left':
+        enemy_surf = pygame.transform.flip(enemy_walkL[int(enemy_index)], flip_x=True, flip_y=False)
+    else:
+        enemy_surf = enemy_idleL
+
+def enemy_climb_animation():
+    global enemy_surf, enemy_index, enemy_y
+    if enemy_y > CEILING:
+        enemy_index += 0.09
+    if enemy_index >= len(enemy_climb):
+        enemy_index = 0
+    enemy_surf = enemy_climb[int(enemy_index)]
+
 
 def thunder():
     global flashTimer, bg_lightning
@@ -291,7 +323,7 @@ def playScrew1():
 
 def playScrew2():
     global screw2Playing
-    screwLight.play()
+    screwLight2.play()
     screw2Playing = True
 
 
@@ -328,7 +360,6 @@ def unscrew(light):
 def playBreak1():
     breakSound.play()
 
-
 def playBreak2():
     breakSound.play()
 
@@ -342,6 +373,7 @@ def playSlip2():
 def ladder1_breaks():
     global ladder_player1, ladder1_broken, player1_hasLadder, ladder_player1_y, char_y, player1_climbing, screw1Playing
     playBreak1()
+    screwLight.stop()
     ladder_player1 = ladder_broken
     ladder1_broken = True
     player1_hasLadder = False
@@ -354,6 +386,7 @@ def ladder1_breaks():
 def ladder2_breaks():
     global ladder_player2, ladder2_broken, player2_hasLadder, ladder_player2_y, enemy_y, player2_climbing, screw2Playing
     playBreak2()
+    screwLight2.stop()
     ladder_player2 = ladder_broken
     ladder2_broken = True
     player2_hasLadder = False
@@ -374,11 +407,13 @@ def player1_falling(direction):
         player1_fall = False
 
 
-def player2_falling():
+def player2_falling(direction):
     global player2_fall, enemy_surf, enemy_y
     timeElapsed = gameTimer - timeStart2
-    # player fall animation
-    enemy_surf = pygame.transform.rotate(char_surf, angle=-90)  # change to sprite
+    if direction == "right":
+        enemy_surf = enemy_fall_right
+    elif direction == "left":
+        enemy_surf = enemy_fall_left
     if timeElapsed >= 1:
         player2_fall = False
 
@@ -393,7 +428,6 @@ def crow_anim():
 
 
 while True:
-
     #  defaults
     WINNER = False
     char_x = 150
@@ -414,6 +448,10 @@ while True:
     char_idle = char_idle_right
     enemy_idle = enemy_idle_left
 
+    introMusic.stop()
+    introMusic2.stop()
+    music.stop()
+    thunderClap.stop()
     introMusicPlaying = False
     introMusic2Playing = False
     musicPlaying = False
@@ -434,7 +472,6 @@ while True:
 
     lights_list = [False, False, False, False, False, False]
 
-
     # set 3 lights off
     list = [0, 1, 2, 3, 4, 5]
     x = random.choice(list)
@@ -448,7 +485,6 @@ while True:
         lights_list[i] = True
 
     # Game Intro
-    '''
     while True:
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -498,7 +534,7 @@ while True:
 
         if keys_pressed[pygame.K_SPACE] and gameTimer > 1.0:
             break
-    
+
         screen.blit(DISPLAY_INTRO, (100, 150))
         if gameTimer > 2.8:
             screen.blit(DISPLAY_INTRO2, (100, 250))
@@ -508,14 +544,13 @@ while True:
             redText = (alpha, 0, 0)
             DISPLAY_INTRO3 = smallFont.render('To stay alive.', True, redText)
             screen.blit(DISPLAY_INTRO3, (100, 400))
-        if gameTimer > 9:
+        if gameTimer > 9:  # 9
             break
     
         pygame.display.update()
         clock.tick(60)
-    '''
-    # Main Game
 
+    # Main Game
     while True:
         gameTimer += 0.016
         # print(gameTimer)
@@ -531,8 +566,8 @@ while True:
             thunder()
 
         # lightning flashes
-        if flashTimer > 9:
-            flashChance = random.randint(0, 220)
+        if flashTimer > 10:  # 9
+            flashChance = random.randint(0, 220) # 220
             if flashChance == 1:
                 thunder()
 
@@ -550,7 +585,7 @@ while True:
         keys_pressed = pygame.key.get_pressed()
         if keys_pressed[pygame.K_ESCAPE]:
             exit()
-        if keys_pressed[pygame.K_SPACE]: # and WINNER:
+        if keys_pressed[pygame.K_SPACE] and WINNER:
             break
 
         if keys_pressed[pygame.K_LEFT] and char_y == FLOOR and not player1_fall and not WINNER:
@@ -558,15 +593,12 @@ while True:
             char_direction = 'left'
             if player1_hasLadder:
                 char_animation_ladder(char_direction)
-            else:
-                char_animation(char_direction)
-            if player1_hasLadder:
+                char_idle = char_idle_leftL
                 ladder_player1 = ladder_player1_left
                 ladder_player1_x = char_rect.x
                 ladder_player1_y = LADDER_Y_WALK
-            if player1_hasLadder:
-                char_idle = char_idle_leftL
             else:
+                char_animation(char_direction)
                 char_idle = char_idle_left
             if 720 >= char_x >= 600:              # slip on puddle
                 slip_chance1 = random.randint(0, SLIP_CHANCE)
@@ -582,16 +614,13 @@ while True:
             char_direction = 'right'
             if player1_hasLadder:
                 char_animation_ladder(char_direction)
-            else:
-                char_animation(char_direction)
-            if player1_hasLadder:
                 ladder_player1 = ladder_player1_right
                 ladder_player1_x = char_rect.x
                 ladder_player1_y = LADDER_Y_WALK
-            if player1_hasLadder:
                 char_idle = char_idle_rightL
             else:
                 char_idle = char_idle_right
+                char_animation(char_direction)
             if 720 >= char_x >= 600:              # slip on puddle
                 slip_chance1 = random.randint(0, SLIP_CHANCE)
                 if slip_chance1 == 0:
@@ -666,19 +695,22 @@ while True:
         if not player1_climbing and char_y >= CEILING:
             char_y += Y_SPEED
 
-
         # player 2 movement
         enemy_rect = enemy_surf.get_rect(midbottom=(enemy_x, enemy_y))
         enemy_surf = enemy_idle
 
         if keys_pressed[pygame.K_a] and enemy_y == FLOOR and not player2_fall and not WINNER:
             enemy_x -= X_SPEED
-            enemy_animation('left')
+            enemy_direction = 'left'
             if player2_hasLadder:
+                enemy_animation_ladder(enemy_direction)
+                enemy_idle = enemy_idle_leftL
                 ladder_player2 = ladder_player2_left
                 ladder_player2_x = enemy_rect.x
                 ladder_player2_y = LADDER_Y_WALK
-            enemy_idle = enemy_idle_left
+            else:
+                enemy_idle = enemy_idle_left
+                enemy_animation(enemy_direction)
             if 720 >= enemy_x >= 600:              # slip on puddle
                 slip_chance2 = random.randint(0, SLIP_CHANCE)
                 if slip_chance2 == 0:
@@ -690,12 +722,16 @@ while True:
                         ladder2_breaks()
         if keys_pressed[pygame.K_d] and enemy_y == FLOOR and not player2_fall and not WINNER:
             enemy_x += X_SPEED
-            enemy_animation('right')
+            enemy_direction = 'right'
             if player2_hasLadder:
+                enemy_animation_ladder(enemy_direction)
+                enemy_idle = enemy_idle_rightL
                 ladder_player2 = ladder_player2_right
                 ladder_player2_x = enemy_rect.x
                 ladder_player2_y = LADDER_Y_WALK
-            enemy_idle = enemy_idle_right
+            else:
+                enemy_animation(enemy_direction)
+                enemy_idle = enemy_idle_right
             if 720 >= enemy_x >= 600:              # slip on puddle
                 slip_chance2 = random.randint(0, SLIP_CHANCE)
                 if slip_chance2 == 0:
@@ -705,6 +741,8 @@ while True:
                         player2_fall = True
                     if player2_hasLadder:
                         ladder2_breaks()
+        if player2_fall:
+            player2_falling(enemy_direction)
 
         if keys_pressed[pygame.K_w]:  # climb
             if player2_hasLadder and enemy_y == FLOOR and not player2_climbing and not player2_fall and not WINNER:
@@ -736,6 +774,9 @@ while True:
                     timeStart2 = gameTimer
                 player2_climbing = True
 
+        if enemy_y < FLOOR:
+            enemy_climb_animation()
+
         if player2_climbing and (enemy_y > CEILING):
             enemy_y -= Y_SPEED
         if enemy_y <= 430:
@@ -743,11 +784,11 @@ while True:
             fall_chance2 = random.randint(0, FALL_CHANCE)
             if fall_chance2 == 0:
                 if not player2_fall:
-                    timeStart = gameTimer
+                    timeStart2 = gameTimer
                     player2_fall = True
                 ladder2_breaks()
         if player2_fall:
-            player2_falling()
+            player2_falling(enemy_direction)
 
         if enemy_x == lamp_rect1.centerx and enemy_y <= CEILING:
             unscrew(0)
@@ -768,6 +809,7 @@ while True:
             enemy_y += Y_SPEED
 
         # show backgrounds
+        flash = 255
         if not lightning:
             flash = 100  # sets brightness of sky without lightning
         screen.blit(bg_black, (0, 0))
@@ -794,8 +836,6 @@ while True:
         if char_y <= CEILING:
             char_y = CEILING
 
-        screen.blit(ladder_player1, (ladder_player1_x, ladder_player1_y))
-
         # player2 boundaries
         if enemy_rect.right <= 0:  # transports to other side of screen
             player2_hasLadder = True  # gets a ladder off-screen
@@ -809,9 +849,9 @@ while True:
             enemy_y = CEILING
 
         screen.blit(ladder_player2, (ladder_player2_x, ladder_player2_y))
-
-        screen.blit(char_surf, char_rect)
         screen.blit(enemy_surf, enemy_rect)
+        screen.blit(ladder_player1, (ladder_player1_x, ladder_player1_y))
+        screen.blit(char_surf, char_rect)
 
         # display light fixture(off) sprites
         screen.blit(lampOff1, lampOff_rect1)  # always visible
@@ -909,16 +949,28 @@ while True:
         lightning = False
 
         # Display winner
+        if not WINNER:
+            fade = 255
         if False not in lights_list:  # player one wins
             WINNER = True
-            enemy_idle = crow_surf
+            fade -= 1.7
             screen.blit(DISPLAY_WINNER1, (230, 240))
+        enemy_surf.set_alpha(fade)
 
-        elif True not in lights_list:  # player two wins
+        if True not in lights_list:  # player two wins
             WINNER = True
+            if not lightning:
+                char_idle = char_dead
+                enemy_idle = enemy_fall
+                if player1_hasLadder:
+                    if char_x <= 600:
+                        char_x = ladder_player1_x + 140
+                    else:
+                        char_x = ladder_player1_x - 40
+                enemy_x = char_x
+                enemy_y = char_y
             screen.blit(DISPLAY_WINNER2, (230, 240))
-
-
+        if WINNER:
+            music.fadeout(1500)
         pygame.display.update()
         clock.tick(60)
-
