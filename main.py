@@ -37,7 +37,8 @@ POINTS1 = 0
 POINTS2 = 0
 
 w, h = 1320, 600
-screen = pygame.display.set_mode((w, h))
+surface = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
+screen = pygame.display.set_mode((1920, 1080))
 
 pygame.display.set_caption('Night Shift')  # Title of the window
 clock = pygame.time.Clock()
@@ -49,6 +50,8 @@ bg_black.fill('black')
 fg_white = pygame.Surface((w, h)).convert_alpha()
 color = (200, 220, 255)
 fg_white.fill(color)
+frame = pygame.image.load('assets/frame.png').convert_alpha()
+frame = pygame.transform.scale(frame, (1920, 1080))
 
 bg_clouds = pygame.image.load('assets/clouds.png').convert_alpha()
 bg_lightning = pygame.image.load('assets/lightning.png').convert_alpha()
@@ -201,13 +204,17 @@ screwLight = pygame.mixer.Sound('assets/screwlight.wav')
 screwLight2 = screwLight
 breakSound = pygame.mixer.Sound('assets/break.wav')
 slipSound = pygame.mixer.Sound('assets/slip.wav')
+player1win = pygame.mixer.Sound('assets/player1win.wav')
+player2win = pygame.mixer.Sound('assets/player2win.wav')
 thunderClap.set_volume(0.25)  # 0.3
-introMusic.set_volume(0.5)  # 0.5
-introMusic2.set_volume(1.0)  # 1.0
+introMusic.set_volume(0.8)  # 0.8
+introMusic2.set_volume(0.9)  # 0.9
 music.set_volume(0.4)  # 0.4
 screwLight.set_volume(0.4)  # 0.4
 breakSound.set_volume(1.0)  # 1.0
 slipSound.set_volume(0.4)  # 0.4
+player1win.set_volume(0.8)  # 0.8
+player2win.set_volume(0.3)  # 0.3
 
 
 def rain_animation():
@@ -458,6 +465,8 @@ while True:
     introMusic2.stop()
     music.stop()
     thunderClap.stop()
+    player1win.stop()
+    player2win.stop()
     introMusicPlaying = False
     introMusic2Playing = False
     musicPlaying = False
@@ -514,6 +523,9 @@ while True:
         if gameTimer > 6.3:
             screen.blit(DISPLAY_PRESS_SPACE, (1000, 520))
 
+        surface.blit(screen, (300, 240))
+        surface.blit(frame, (0, 0))
+
         pygame.display.update()
         clock.tick(60)
 
@@ -551,11 +563,15 @@ while True:
         if gameTimer > 9:  # 9
             break
 
+        surface.blit(screen, (300, 240))
+        surface.blit(frame, (0, 0))
+
         pygame.display.update()
         clock.tick(60)
 
     # Main Game
     while True:
+        scaled = False
         gameTimer += 0.016
         # print(gameTimer)
         for event in pygame.event.get():
@@ -956,6 +972,8 @@ while True:
         if not WINNER:
             fade = 255
         if False not in lights_list:  # player one wins
+            if not WINNER:
+                player1win.play()
             WINNER = True
             fade -= 1.7
             screen.blit(DISPLAY_WINNER1, (230, 240))
@@ -965,6 +983,8 @@ while True:
         enemy_surf.set_alpha(fade)
 
         if True not in lights_list:  # player two wins
+            if not WINNER:
+                player2win.play()
             WINNER = True
             if not lightning:
                 char_idle = char_dead
@@ -981,7 +1001,7 @@ while True:
                 POINTS2 += 1
                 counter = True
         if WINNER:
-            music.fadeout(1500)
+            music.fadeout(100)
 
         SCORE1 = str(POINTS1)
         SCORE2 = str(POINTS2)
@@ -991,6 +1011,9 @@ while True:
 
         screen.blit(DISPLAY_SCORE_1, (2, 2))
         screen.blit(DISPLAY_SCORE_2, (1300, 2))
+
+        surface.blit(screen, (300, 240))
+        surface.blit(frame, (0, 0))
 
         pygame.display.update()
         clock.tick(60)
