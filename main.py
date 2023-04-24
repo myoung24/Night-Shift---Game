@@ -33,11 +33,11 @@ green = (0, 200, 0)
 DISPLAY_INTRO3 = smallFont.render('To stay alive.', True, red)
 DISPLAY_WINNER1 = testFont.render('Player One Wins!', True, green)
 DISPLAY_WINNER2 = testFont.render('Player Two Wins!', True, red)
-
+POINTS1 = 0
+POINTS2 = 0
 
 w, h = 1320, 600
 screen = pygame.display.set_mode((w, h))
-
 
 pygame.display.set_caption('Night Shift')  # Title of the window
 clock = pygame.time.Clock()
@@ -81,42 +81,42 @@ fg_light6_off = pygame.image.load('assets/light6_off.png').convert_alpha()
 lamp1 = pygame.image.load('assets/bulb_on.png').convert_alpha()
 lamp_rect1 = lamp1.get_rect(midtop=(110, 0))
 # bulb when on
-lampOff1 = pygame.image.load('assets/bulb_off.png')
+lampOff1 = pygame.image.load('assets/bulb_off.png').convert_alpha()
 lampOff_rect1 = lampOff1.get_rect(midtop=(110, 0))
 
 # bulb when off
 lamp2 = pygame.image.load('assets/bulb_on.png').convert_alpha()
 lamp_rect2 = lamp2.get_rect(midtop=(330, 0))
 # bulb when on
-lampOff2 = pygame.image.load('assets/bulb_off.png')
+lampOff2 = pygame.image.load('assets/bulb_off.png').convert_alpha()
 lampOff_rect2 = lampOff2.get_rect(midtop=(330, 0))
 
 # bulb when off
 lamp3 = pygame.image.load('assets/bulb_on.png').convert_alpha()
 lamp_rect3 = lamp3.get_rect(midtop=(550, 0))
 # bulb when on
-lampOff3 = pygame.image.load('assets/bulb_off.png')
+lampOff3 = pygame.image.load('assets/bulb_off.png').convert_alpha()
 lampOff_rect3 = lampOff3.get_rect(midtop=(550, 0))
 
 # bulb when off
 lamp4 = pygame.image.load('assets/bulb_on.png').convert_alpha()
 lamp_rect4 = lamp4.get_rect(midtop=(770, 0))
 # bulb when on
-lampOff4 = pygame.image.load('assets/bulb_off.png')
+lampOff4 = pygame.image.load('assets/bulb_off.png').convert_alpha()
 lampOff_rect4 = lampOff4.get_rect(midtop=(770, 0))
 
 # bulb when off
 lamp5 = pygame.image.load('assets/bulb_on.png').convert_alpha()
 lamp_rect5 = lamp5.get_rect(midtop=(990, 0))
 # bulb when on
-lampOff5 = pygame.image.load('assets/bulb_off.png')
+lampOff5 = pygame.image.load('assets/bulb_off.png').convert_alpha()
 lampOff_rect5 = lampOff5.get_rect(midtop=(990, 0))
 
 # bulb when off
 lamp6 = pygame.image.load('assets/bulb_on.png').convert_alpha()
 lamp_rect6 = lamp6.get_rect(midtop=(1210, 0))
 # bulb when on
-lampOff6 = pygame.image.load('assets/bulb_off.png')
+lampOff6 = pygame.image.load('assets/bulb_off.png').convert_alpha()
 lampOff_rect6 = lampOff6.get_rect(midtop=(1210, 0))
 
 # player 1
@@ -136,12 +136,12 @@ char_walk = [char_walk1, char_walk2]
 char_walk1L = pygame.image.load('assets/char_walk1L.png').convert_alpha()
 char_walk2L = pygame.image.load('assets/char_walk2L.png').convert_alpha()
 char_walkL = [char_walk1L, char_walk2L]
-char_climb1 = pygame.image.load('assets/char_climb1.png')
+char_climb1 = pygame.image.load('assets/char_climb1.png').convert_alpha()
 char_climb1 = pygame.transform.scale(char_climb1, (150, 155))
-char_climb2 = pygame.image.load('assets/char_climb2.png')
+char_climb2 = pygame.image.load('assets/char_climb2.png').convert_alpha()
 char_climb2 = pygame.transform.scale(char_climb2, (150, 155))
 char_climb = [char_climb1, char_climb2]
-char_dead = pygame.image.load('assets/char_dead.png')
+char_dead = pygame.image.load('assets/char_dead.png').convert_alpha()
 char_index = 0
 char_surf = char_idle
 
@@ -210,7 +210,6 @@ breakSound.set_volume(1.0)  # 1.0
 slipSound.set_volume(0.4)  # 0.4
 
 
-
 def rain_animation():
     global bg_rain_surf, bg_rain_index
     bg_rain_index += 0.3
@@ -231,6 +230,7 @@ def char_animation(direction):
     else:
         char_surf = char_idle
 
+
 def char_animation_ladder(direction):
     global char_surf, char_index
     char_index += 0.15
@@ -242,6 +242,7 @@ def char_animation_ladder(direction):
         char_surf = pygame.transform.flip(char_walkL[int(char_index)], flip_x=True, flip_y=False)
     else:
         char_surf = char_idleL
+
 
 def char_climb_animation():
     global char_surf, char_index, char_y
@@ -265,6 +266,7 @@ def enemy_animation(direction='right'):
     else:
         enemy_surf = enemy_idle
 
+
 def enemy_animation_ladder(direction):
     global enemy_surf, enemy_index
     enemy_index += 0.15
@@ -276,6 +278,7 @@ def enemy_animation_ladder(direction):
         enemy_surf = pygame.transform.flip(enemy_walkL[int(enemy_index)], flip_x=True, flip_y=False)
     else:
         enemy_surf = enemy_idleL
+
 
 def enemy_climb_animation():
     global enemy_surf, enemy_index, enemy_y
@@ -329,7 +332,7 @@ def playScrew2():
 
 def screw(light):
     global player1_climbing, timeStart, lights_list, screw1Playing
-    if lights_list[light] == False:
+    if not lights_list[light]:
         if not screw1Playing:
             playScrew1()
         timeElapsed = (gameTimer - timeStart)
@@ -344,7 +347,7 @@ def screw(light):
 
 def unscrew(light):
     global player2_climbing, timeStart2, lights_list, screw2Playing
-    if lights_list[light] == True:
+    if lights_list[light]:
         if not screw2Playing:
             playScrew2()
         timeElapsed = (gameTimer - timeStart2)
@@ -360,11 +363,14 @@ def unscrew(light):
 def playBreak1():
     breakSound.play()
 
+
 def playBreak2():
     breakSound.play()
 
+
 def playSlip1():
     slipSound.play()
+
 
 def playSlip2():
     slipSound.play()
@@ -469,17 +475,15 @@ while True:
     player2_atLight = False
     player1_fall = False
     player2_fall = False
+    counter = False
 
     lights_list = [False, False, False, False, False, False]
 
-    # set 3 lights off
+    # turns(3 lights on
     list = [0, 1, 2, 3, 4, 5]
-    x = random.choice(list)
-    list.remove(x)
-    x = random.choice(list)
-    list.remove(x)
-    x = random.choice(list)
-    list.remove(x)
+    for i in range(3):
+        x = random.choice(list)
+        list.remove(x)
 
     for i in list:
         lights_list[i] = True
@@ -520,11 +524,11 @@ while True:
             if event.type == pygame.QUIT:
                 pygame.quit()
                 exit()
-    
+
         keys_pressed = pygame.key.get_pressed()
         if keys_pressed[pygame.K_ESCAPE]:
             exit()
-    
+
         screen.blit(bg_black, (0, 0))
         if introMusicPlaying:
             introMusic.stop()
@@ -532,7 +536,7 @@ while True:
             playIntro2()
         gameTimer += 0.016
 
-        if keys_pressed[pygame.K_SPACE] and gameTimer > 1.0:
+        if keys_pressed[pygame.K_SPACE] and gameTimer > 0.5:
             break
 
         screen.blit(DISPLAY_INTRO, (100, 150))
@@ -546,7 +550,7 @@ while True:
             screen.blit(DISPLAY_INTRO3, (100, 400))
         if gameTimer > 9:  # 9
             break
-    
+
         pygame.display.update()
         clock.tick(60)
 
@@ -567,7 +571,7 @@ while True:
 
         # lightning flashes
         if flashTimer > 10:  # 9
-            flashChance = random.randint(0, 220) # 220
+            flashChance = random.randint(0, 220)  # 220
             if flashChance == 1:
                 thunder()
 
@@ -955,6 +959,9 @@ while True:
             WINNER = True
             fade -= 1.7
             screen.blit(DISPLAY_WINNER1, (230, 240))
+            if not counter:
+                POINTS1 += 1
+                counter = True
         enemy_surf.set_alpha(fade)
 
         if True not in lights_list:  # player two wins
@@ -970,7 +977,20 @@ while True:
                 enemy_x = char_x
                 enemy_y = char_y
             screen.blit(DISPLAY_WINNER2, (230, 240))
+            if not counter:
+                POINTS2 += 1
+                counter = True
         if WINNER:
             music.fadeout(1500)
+
+        SCORE1 = str(POINTS1)
+        SCORE2 = str(POINTS2)
+
+        DISPLAY_SCORE_1 = smallerFont.render(SCORE1, True, green)
+        DISPLAY_SCORE_2 = smallerFont.render(SCORE2, True, red)
+
+        screen.blit(DISPLAY_SCORE_1, (2, 2))
+        screen.blit(DISPLAY_SCORE_2, (1300, 2))
+
         pygame.display.update()
         clock.tick(60)
