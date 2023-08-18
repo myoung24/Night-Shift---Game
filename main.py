@@ -23,6 +23,7 @@ smallFont = pygame.font.Font(None, 60)
 smallerFont = pygame.font.Font(None, 35)
 flashTimer = 4  # max duration of lightning strike
 fade = 255
+gameTimer = 0
 
 DISPLAY_TITLE = testFont.render('NIGHT SHIFT', True, 'White')
 DISPLAY_PRESS_SPACE = smallerFont.render('Press Space to Play...', True, 'White')
@@ -37,8 +38,7 @@ POINTS1 = 0
 POINTS2 = 0
 
 w, h = 1320, 600
-surface = pygame.display.set_mode((1920, 1080), pygame.FULLSCREEN)
-screen = pygame.display.set_mode((1920, 1080))
+screen = pygame.display.set_mode((w, h), pygame.NOFRAME)
 
 pygame.display.set_caption('Night Shift')  # Title of the window
 clock = pygame.time.Clock()
@@ -147,7 +147,6 @@ char_climb = [char_climb1, char_climb2]
 char_dead = pygame.image.load('assets/char_dead.png').convert_alpha()
 char_index = 0
 char_surf = char_idle
-
 
 # player 2
 enemy_idle = pygame.image.load('assets/enemy_walk1.png').convert_alpha()
@@ -440,6 +439,39 @@ def crow_anim():
     crow_surf = pygame.transform.scale(crow_surf, (100, 100))
 
 
+# Game Intro
+introMusicPlaying = False
+
+while True:
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            exit()
+
+    if not introMusicPlaying:
+        playIntro()
+
+    keys_pressed = pygame.key.get_pressed()
+    if keys_pressed[pygame.K_ESCAPE]:
+        exit()
+    if keys_pressed[pygame.K_SPACE] and gameTimer > 0.5:
+        break
+
+    gameTimer += 0.016
+    screen.blit(bg_black, (0, 0))
+    bg_rain_surf.set_alpha(80)
+    screen.blit(bg_rain_surf, (0, 0))
+    rain_animation()
+
+    screen.blit(DISPLAY_TITLE, (330, 250))
+    if gameTimer > 6.3:
+        screen.blit(DISPLAY_PRESS_SPACE, (1000, 520))
+
+    screen.blit(frame, (-300, -240))
+    pygame.display.update()
+    clock.tick(60)
+
 while True:
     #  defaults
     WINNER = False
@@ -497,38 +529,6 @@ while True:
     for i in list:
         lights_list[i] = True
 
-    # Game Intro
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                exit()
-
-        if not introMusicPlaying:
-            playIntro()
-
-        keys_pressed = pygame.key.get_pressed()
-        if keys_pressed[pygame.K_ESCAPE]:
-            exit()
-        if keys_pressed[pygame.K_SPACE] and gameTimer > 0.5:
-            break
-
-        gameTimer += 0.016
-        screen.blit(bg_black, (0, 0))
-        bg_rain_surf.set_alpha(80)
-        screen.blit(bg_rain_surf, (0, 0))
-        rain_animation()
-
-        screen.blit(DISPLAY_TITLE, (330, 250))
-        if gameTimer > 6.3:
-            screen.blit(DISPLAY_PRESS_SPACE, (1000, 520))
-
-        surface.blit(screen, (300, 240))
-        surface.blit(frame, (0, 0))
-
-        pygame.display.update()
-        clock.tick(60)
-
     # intro part 2
     while True:
 
@@ -563,17 +563,13 @@ while True:
         if gameTimer > 9:  # 9
             break
 
-        surface.blit(screen, (300, 240))
-        surface.blit(frame, (0, 0))
-
+        screen.blit(frame, (-300, -240))
         pygame.display.update()
         clock.tick(60)
 
     # Main Game
     while True:
-        scaled = False
         gameTimer += 0.016
-        # print(gameTimer)
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
@@ -620,7 +616,7 @@ while True:
             else:
                 char_animation(char_direction)
                 char_idle = char_idle_left
-            if 720 >= char_x >= 600:              # slip on puddle
+            if 720 >= char_x >= 600:  # slip on puddle
                 slip_chance1 = random.randint(0, SLIP_CHANCE)
                 if slip_chance1 == 0:
                     if not player1_fall:
@@ -641,7 +637,7 @@ while True:
             else:
                 char_idle = char_idle_right
                 char_animation(char_direction)
-            if 720 >= char_x >= 600:              # slip on puddle
+            if 720 >= char_x >= 600:  # slip on puddle
                 slip_chance1 = random.randint(0, SLIP_CHANCE)
                 if slip_chance1 == 0:
                     if not player1_fall:
@@ -731,7 +727,7 @@ while True:
             else:
                 enemy_idle = enemy_idle_left
                 enemy_animation(enemy_direction)
-            if 720 >= enemy_x >= 600:              # slip on puddle
+            if 720 >= enemy_x >= 600:  # slip on puddle
                 slip_chance2 = random.randint(0, SLIP_CHANCE)
                 if slip_chance2 == 0:
                     if not player2_fall:
@@ -752,7 +748,7 @@ while True:
             else:
                 enemy_animation(enemy_direction)
                 enemy_idle = enemy_idle_right
-            if 720 >= enemy_x >= 600:              # slip on puddle
+            if 720 >= enemy_x >= 600:  # slip on puddle
                 slip_chance2 = random.randint(0, SLIP_CHANCE)
                 if slip_chance2 == 0:
                     if not player2_fall:
@@ -974,9 +970,13 @@ while True:
         if False not in lights_list:  # player one wins
             if not WINNER:
                 player1win.play()
+                gameTimer = 0
+            gameTimer += 0.016
             WINNER = True
             fade -= 1.7
             screen.blit(DISPLAY_WINNER1, (230, 240))
+            if gameTimer > 8:
+                screen.blit(DISPLAY_PRESS_SPACE, (1000, 520))
             if not counter:
                 POINTS1 += 1
                 counter = True
@@ -985,6 +985,8 @@ while True:
         if True not in lights_list:  # player two wins
             if not WINNER:
                 player2win.play()
+                gameTimer = 0
+            gameTimer += 0.016
             WINNER = True
             if not lightning:
                 char_idle = char_dead
@@ -997,6 +999,8 @@ while True:
                 enemy_x = char_x
                 enemy_y = char_y
             screen.blit(DISPLAY_WINNER2, (230, 240))
+            if gameTimer > 8:
+                screen.blit(DISPLAY_PRESS_SPACE, (1000, 520))
             if not counter:
                 POINTS2 += 1
                 counter = True
@@ -1009,11 +1013,10 @@ while True:
         DISPLAY_SCORE_1 = smallerFont.render(SCORE1, True, green)
         DISPLAY_SCORE_2 = smallerFont.render(SCORE2, True, red)
 
-        screen.blit(DISPLAY_SCORE_1, (2, 2))
-        screen.blit(DISPLAY_SCORE_2, (1300, 2))
+        screen.blit(DISPLAY_SCORE_1, (12, 2))
+        screen.blit(DISPLAY_SCORE_2, (1290, 2))
 
-        surface.blit(screen, (300, 240))
-        surface.blit(frame, (0, 0))
+        screen.blit(frame, (-300, -240))
 
         pygame.display.update()
         clock.tick(60)
